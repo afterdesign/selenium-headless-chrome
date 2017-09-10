@@ -1,0 +1,10 @@
+[Unit]
+Description=Start selenium server standalone on port 4444
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=/usr/bin/java -Dwebdriver.chrome.driver=/opt/chromedriver/chromedriver -jar /opt/selenium/selenium.jar -port 4444 -log /var/log/selenium.log
+
+[Install]
+WantedBy=default.target

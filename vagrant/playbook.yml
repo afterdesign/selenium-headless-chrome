@@ -1,0 +1,64 @@
+---
+- hosts: all
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Add google chrome key
+      apt_key:
+        url: https://dl.google.com/linux/linux_signing_key.pub
+        state: present
+    - name: Add google chrome repository
+      apt_repository:
+        repo: 'deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main'
+        state: present
+        update_cache: yes
+    - name: Install chrome
+      apt:
+        name: google-chrome-stable
+        state: present
+
+    - name: Install dependencies for selenium
+      apt:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - openjdk-8-jre-headless
+        - unzip
+
+    - name: Get chromedriver version
+      uri:
+        url: http://chromedriver.storage.googleapis.com/LATEST_RELEASE
+        return_content: yes
+      register: chromedriver_version
+
+    - name: Create /opt directories
+      file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - /opt/chromedriver
+        - /opt/selenium
+
+    - name: Download chromedriver
+      unarchive:
+        src: "http://chromedriver.storage.googleapis.com/{{ chromedriver_version.content | trim }}/chromedriver_linux64.zip"
+        dest: /opt/chromedriver/
+        remote_src: yes
+
+    - name: Download newest selenium server
+      get_url:
+        url: https://goo.gl/hWYjHR
+        dest: /opt/selenium/selenium.jar
+        force: yes
+
+    - name: Copy selenium service to /etc/systemd/system/
+      copy:
+        src: /project/selenium.service
+        dest: /etc/systemd/system/selenium.service
+
+    - name: Enable and run selenium
+      systemd:
+        state: started
+        daemon_reload: yes
+        name: selenium
