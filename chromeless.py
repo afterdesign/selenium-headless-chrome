@@ -14,6 +14,7 @@ def remote_chrome_webdriver_setup():
 
     options = webdriver.ChromeOptions()
     options.add_argument('headless')
+    options.add_argument('disable-gpu')
     options.add_argument('window-size=1920x1080')
     chrome_capabilities = options.to_capabilities()
 
